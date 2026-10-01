@@ -1,0 +1,82 @@
+[
+  {
+    "id": "form-vase",
+    "name": "The Form Vase",
+    "category": "CERAMICS",
+    "description": "A sculptural shape for a stem or two. Warm ivory, quietly textured.",
+    "price": 2450000,
+    "image": "/products/form-vase.webp",
+    "position": "center",
+    "tone": 0
+  },
+  {
+    "id": "linen-throw",
+    "name": "Everyday Linen Throw",
+    "category": "SOFT THINGS",
+    "description": "An easy layer in earthy olive. For the sofa, the bed, the slow Sunday.",
+    "price": 3200000,
+    "image": "/products/linen-throw.webp",
+    "position": "center",
+    "tone": 1
+  },
+  {
+    "id": "sunday-bowl",
+    "name": "The Sunday Bowl",
+    "category": "AT THE TABLE",
+    "description": "A generous terracotta bowl for fruit, shared meals, and everyday rituals.",
+    "price": 1850000,
+    "image": "/products/sunday-bowl.webp",
+    "position": "center",
+    "tone": 2
+  },
+  {
+    "id": "woven-basket",
+    "name": "The Woven Basket",
+    "category": "EVERYDAY STORAGE",
+    "description": "Natural seagrass, woven by hand. A home for throws and little essentials.",
+    "price": 2800000,
+    "image": "/products/woven-basket.webp",
+    "position": "center",
+    "tone": 3
+  },
+  {
+    "id": "amber-candle",
+    "name": "The Amber Candle",
+    "category": "SLOW MOMENTS",
+    "description": "A warm amber vessel and a quiet glow for winding down at home.",
+    "price": 1450000,
+    "image": "/products/amber-candle.webp",
+    "position": "center",
+    "tone": 4
+  },
+  {
+    "id": "oak-board",
+    "name": "The Oak Serving Board",
+    "category": "AT THE TABLE",
+    "description": "Beautiful oak grain and an easy handle. Made for gathering around.",
+    "price": 2200000,
+    "image": "/products/oak-board.webp",
+    "position": "center",
+    "tone": 5
+  },
+  {
+    "id": "linen-cushion",
+    "name": "The Rust Linen Cushion",
+    "category": "SOFT THINGS",
+    "description": "An earthy rust accent with a soft linen finish. Settle in, stay a while.",
+    "price": 1950000,
+    "image": "/products/linen-cushion.webp",
+    "position": "center",
+    "tone": 6
+  },
+  {
+    "id": "stoneware-mug",
+    "name": "The Morning Mug",
+    "category": "CERAMICS",
+    "description": "Sage stoneware with a generous handle. A small ritual for every morning.",
+    "price": 1250000,
+    "image": "/products/stoneware-mug.webp",
+    "position": "center",
+    "tone": 7
+  }
+]

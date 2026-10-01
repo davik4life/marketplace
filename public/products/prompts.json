@@ -1,0 +1,38 @@
+{
+  "method": "Built-in image_gen",
+  "promptTemplate": "Use case: product-mockup. Create a unique square editorial ecommerce product photograph for the Okirika home goods shop. Subject: {subject}. Show the entire single product, centered with generous clear margins on a warm pale cream plaster studio surface and background. Soft natural side lighting, gentle realistic shadows, refined tactile texture, photorealistic, muted earthy color palette. Product is the only object. No other products, no props, no typography, no logos, no watermark. Square 1024x1024 composition.",
+  "assets": [
+    {
+      "file": "form-vase.webp",
+      "subject": "a single sculptural ivory ceramic vase with a short narrow neck and rounded body, subtly speckled matte glaze, no flowers"
+    },
+    {
+      "file": "linen-throw.webp",
+      "subject": "a single neatly folded olive-green linen throw blanket, natural weave and softly fringed edge"
+    },
+    {
+      "file": "sunday-bowl.webp",
+      "subject": "a single wide shallow terracotta serving bowl, warm reddish clay and smooth handmade rim"
+    },
+    {
+      "file": "woven-basket.webp",
+      "subject": "a single handwoven natural seagrass storage basket with two loop handles"
+    },
+    {
+      "file": "amber-candle.webp",
+      "subject": "a single amber glass candle jar with cream wax and a small unlit cotton wick, plain jar without labels"
+    },
+    {
+      "file": "oak-board.webp",
+      "subject": "a single solid pale oak serving board with a rounded handle and hanging hole, beautiful visible wood grain"
+    },
+    {
+      "file": "linen-cushion.webp",
+      "subject": "a single square rust-colored linen cushion, plump shape with a subtle stitched edge"
+    },
+    {
+      "file": "stoneware-mug.webp",
+      "subject": "a single rounded sage-green stoneware mug with generous loop handle, speckled satin glaze"
+    }
+  ]
+}

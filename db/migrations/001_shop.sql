@@ -1,0 +1,10 @@
+CREATE TABLE users (id uuid PRIMARY KEY, google_sub text UNIQUE NOT NULL, email text NOT NULL, name text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE products (id text PRIMARY KEY, name text NOT NULL, category text NOT NULL, description text NOT NULL, price integer NOT NULL CHECK(price>0), image text NOT NULL, position text NOT NULL, tone integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true);
+CREATE TABLE carts (id uuid PRIMARY KEY, token_hash text UNIQUE NOT NULL, user_id uuid UNIQUE REFERENCES users(id), created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE sessions (token_hash text PRIMARY KEY, user_id uuid NOT NULL REFERENCES users(id), cart_id uuid NOT NULL REFERENCES carts(id), expires_at timestamptz NOT NULL);
+CREATE TABLE oauth_states (state_hash text PRIMARY KEY, nonce text NOT NULL, verifier text NOT NULL, cart_id uuid NOT NULL REFERENCES carts(id), expires_at timestamptz NOT NULL);
+CREATE TABLE cart_items (cart_id uuid NOT NULL REFERENCES carts(id), product_id text NOT NULL REFERENCES products(id), quantity integer NOT NULL CHECK(quantity BETWEEN 1 AND 20), PRIMARY KEY(cart_id,product_id));
+CREATE TABLE orders (id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES users(id), cart_id uuid NOT NULL REFERENCES carts(id), idempotency_key uuid NOT NULL, reference text UNIQUE NOT NULL, email text NOT NULL, delivery jsonb NOT NULL, items jsonb NOT NULL, subtotal integer NOT NULL CHECK(subtotal>0), shipping integer NOT NULL CHECK(shipping>=0), total integer NOT NULL CHECK(total=subtotal+shipping), status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid')), authorization_url text, paid_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(user_id,idempotency_key));
+CREATE TABLE email_outbox (order_id uuid PRIMARY KEY REFERENCES orders(id), status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent')), attempts integer NOT NULL DEFAULT 0, lease_until timestamptz, message_id text, sent_at timestamptz);
+CREATE INDEX orders_user_created ON orders(user_id,created_at DESC);
+CREATE INDEX sessions_expiry ON sessions(expires_at);
