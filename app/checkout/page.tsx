@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, LockKeyhole, ArrowRight } from "lucide-react";
+import { ArrowLeft, LockKeyhole, ArrowRight, ShieldCheck, Truck, Mail, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useShop, api } from "../shop-context";
 import { money, totals } from "@/lib/commerce";
@@ -44,22 +44,31 @@ export default function Checkout() {
         <ArrowLeft size={14} />
         Back to the collection
       </a>
-      <p className="eyebrow">A FEW GOOD THINGS, ON THEIR WAY</p>
-      <h2>Your bag & checkout</h2>
-      <p className="small">Test checkout · No real charges or shipments</p>
+      <div className="checkout-heading">
+        <div><p className="eyebrow">A FEW GOOD THINGS, ALMOST HOME</p><h1>Your bag & checkout</h1><p>Every detail in one place. A secure finishing touch.</p></div>
+        <span className="secure-label"><LockKeyhole size={16} /> Secure checkout</span>
+      </div>
+      <div className="checkout-test-note"><span>TEST MODE</span> Try the complete checkout. No real charges or shipments.</div>
       {!ready ? (
         <p className="loading">Opening your bag…</p>
+      ) : !items.length ? (
+        <section className="empty-checkout">
+          <span className="empty-bag-icon"><ShoppingBag size={32} strokeWidth={1.3} /></span>
+          <p className="eyebrow">ROOM FOR SOMETHING GOOD</p>
+          <h2>Your bag is waiting for you.</h2>
+          <p>Explore our collection of everyday comforts.<br />We’ll keep your favourites here when you add them.</p>
+          <a className="solid-link" href="/#collection">Explore the collection <ArrowRight size={16} /></a>
+          <div className="empty-assurance"><span><ShieldCheck size={16} /> Secure Paystack checkout</span><span><Mail size={16} /> Email confirmation after payment</span></div>
+        </section>
       ) : (
+        <>
+        <ol className="checkout-steps" aria-label="Checkout steps"><li><span>1</span> Your account</li><li><span>2</span> Delivery details</li><li><span>3</span> Secure payment</li></ol>
         <div className="checkout-grid">
           <form onSubmit={pay} onChange={() => setKey("")}>
             <section className="panel">
-              <h3>01 &nbsp; Your details</h3>
+              <h3><span className="step-number">01</span> Your account</h3>
               {user ? (
-                <p className="small">
-                  Signed in as <strong>{user.email}</strong>
-                  <br />
-                  Your confirmation will be sent to this address.
-                </p>
+                <div className="verified-account"><CheckCircle2 size={22} /><div><strong>{user.name}</strong><span>{user.email}</span><p>Your order confirmation will be sent here.</p></div><span className="verified-tag">Signed in</span></div>
               ) : (
                 <>
                   <p className="small">
@@ -85,11 +94,12 @@ export default function Checkout() {
               )}
             </section>
             <section className="panel">
-              <h3>02 &nbsp; A place to call home</h3>
+              <h3><span className="step-number">02</span> Delivery details</h3>
               <p className="small">
                 Delivery within Nigeria. ₦2,500 delivery; free on orders from
                 ₦75,000.
               </p>
+              <p className="field-note">All fields are required unless marked optional.</p>
               <div className="fields">
                 {[
                   {
@@ -148,7 +158,7 @@ export default function Checkout() {
                       maxLength={f.max}
                       autoComplete={f.auto}
                       type={f.name === "phone" ? "tel" : "text"}
-                      placeholder={f.name === "state" ? "Lagos" : undefined}
+                      placeholder={{name: "Your full name", phone: "e.g. 0801 234 5678", address: "House number and street", city: "e.g. Ikeja", state: "e.g. Lagos", postal: "Postal code"}[f.name]}
                       disabled={submitting}
                     />
                   </label>
@@ -156,14 +166,16 @@ export default function Checkout() {
               </div>
             </section>
             <section className="panel">
-              <h3>03 &nbsp; The finishing touch</h3>
+              <h3><span className="step-number">03</span> Secure payment</h3>
               <p className="small">
                 <LockKeyhole
                   size={14}
                   style={{ display: "inline", marginRight: 7 }}
                 />
-                You’ll complete your test payment securely on Paystack.
+                Your card details stay on Paystack’s secure checkout.
               </p>
+              <div className="payment-provider"><ShieldCheck size={26} /><div><strong>Paystack</strong><span>You’ll be redirected to complete your test payment.</span></div><span className="provider-test">TEST</span></div>
+              {!user && <p className="field-note">Sign in or create an account above to continue to payment.</p>}
               {error && (
                 <p role="alert" className="error">
                   {error}
@@ -179,13 +191,12 @@ export default function Checkout() {
                   ? "Opening secure checkout…"
                   : !paymentReady ? "Test payments are being connected" : `Pay ${money(amount.total)} with Paystack`}
               </button>
-              <p className="small">
-                Your order is confirmed only after payment is verified.
-              </p>
+              <p className="payment-footnote"><Mail size={14} /> A confirmation email follows your verified payment.</p>
+              <a className="checkout-help" href="/help#payments">How checkout works <ArrowRight size={12} /></a>
             </section>
           </form>
           <aside className="summary">
-            <h3>A little something for home</h3>
+            <div className="summary-heading"><h3>Your order</h3><span>{items.reduce((n, item) => n + item.quantity, 0)} items</span></div><p className="small">A little something for home.</p>
             {!items.length ? (
               <div className="empty">
                 <ShoppingBagIcon />
@@ -257,13 +268,13 @@ export default function Checkout() {
               <strong>Total</strong>
               <strong>{money(amount.total)}</strong>
             </div>
-            <p className="small">All prices in Nigerian naira.</p>
+            <p className="small">All prices in Nigerian naira. Delivery included above.</p>
+            <div className="checkout-assurances"><div><Truck size={20} /><p><strong>Delivery within Nigeria</strong><span>₦2,500 · Free from ₦75,000</span></p></div><div><LockKeyhole size={20} /><p><strong>Secure payment</strong><span>Processed on Paystack’s checkout</span></p></div><div><Mail size={20} /><p><strong>Keep track of every order</strong><span>Email confirmation & saved order history</span></p></div></div>
           </aside>
         </div>
+        </>
       )}
     </main>
   );
 }
-function ShoppingBagIcon() {
-  return <span style={{ font: "38px Georgia" }}>o.</span>;
-}
+function ShoppingBagIcon() { return <ShoppingBag size={30} />; }

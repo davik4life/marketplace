@@ -613,3 +613,73 @@ nav.footer-links a { display: inline-block; font-size: 12px; color: #f7f4eb; }
 .auth-switch { font-size: 13px; }
 .auth-switch a { text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
 .auth-switch svg { display: inline; vertical-align: middle; }
+
+.checkout { max-width: 1340px; margin: 0 auto; padding-top: 35px; }
+.checkout-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.checkout-heading h1 { font: 46px/1.2 Georgia, serif; letter-spacing: -1px; margin: 12px 0; }
+.checkout-heading p:not(.eyebrow) { color: #626d60; font-size: 13px; line-height: 1.7; }
+.secure-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; white-space: nowrap; padding: 12px 16px; background: #e8eee4; border-radius: 30px; }
+.checkout-test-note { display: flex; align-items: center; gap: 12px; background: #eeede3; border: 1px solid #deded0; padding: 13px 18px; margin-top: 25px; font-size: 12px; line-height: 1.6; border-radius: 6px; }
+.checkout-test-note > span { font-size: 9px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+.checkout-steps { display: flex; gap: 36px; margin: 30px 0 0; padding: 0; list-style: none; }
+.checkout-steps li { display: flex; align-items: center; gap: 9px; font-size: 11px; }
+.checkout-steps li > span { border: 1px solid #b9c4b4; border-radius: 50%; width: 25px; height: 25px; display: grid; place-items: center; }
+.checkout .checkout-grid { gap: 32px; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); margin-top: 22px; align-items: start; }
+.checkout .panel { background: #fffefa; border: 1px solid #dedfd5; border-radius: 10px; padding: 26px; margin-bottom: 18px; }
+.checkout .panel h3 { font-size: 24px; display: flex; align-items: center; gap: 12px; }
+.step-number { font: 10px Arial, sans-serif; color: #687763; background: #edf0e6; border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; flex-shrink: 0; }
+.verified-account { display: flex; align-items: flex-start; gap: 12px; padding: 17px; background: #eff4eb; border: 1px solid #dce5d4; border-radius: 6px; }
+.verified-account > svg { flex-shrink: 0; }
+.verified-account strong { font-size: 13px; }
+.verified-account div > span { display: block; font-size: 12px; margin-top: 5px; overflow-wrap: anywhere; }
+.verified-account p { font-size: 10px; margin-top: 9px; color: #53634e; line-height: 1.6; }
+.verified-tag { margin-left: auto; font-size: 9px; white-space: nowrap; color: #435e36; }
+.checkout .fields { margin-top: 18px; }
+.checkout label { font-size: 12px; }
+.checkout input { border-radius: 5px; min-height: 46px; color: #293e30; }
+.checkout input:focus { outline: 2px solid #748568; outline-offset: 2px; }
+.field-note { color: #66715f; font-size: 11px; line-height: 1.6; margin-top: 12px; }
+.payment-provider { display: flex; align-items: center; gap: 12px; border: 1px solid #d6dfd0; background: #f4f6ef; padding: 18px 14px; border-radius: 6px; margin-top: 18px; }
+.payment-provider > svg { flex-shrink: 0; }
+.payment-provider strong { font-size: 17px; }
+.payment-provider div span { display: block; font-size: 11px; line-height: 1.6; margin-top: 4px; }
+.provider-test { margin-left: auto; font-size: 9px; border: 1px solid #b8c4ae; border-radius: 3px; padding: 3px 5px; }
+.checkout .pay-button { border-radius: 5px; font-size: 13px; font-weight: 600; }
+.payment-footnote { font-size: 11px; line-height: 1.7; color: #66715f; text-align: center; margin-top: 14px; }
+.payment-footnote svg { display: inline; vertical-align: middle; margin-right: 5px; }
+.checkout-help { display: flex; justify-content: center; gap: 7px; align-items: center; font-size: 11px; text-decoration: underline; margin-top: 14px; }
+.checkout .summary { border: 1px solid #dce0d3; border-radius: 10px; background: #efefe5; position: sticky; top: 24px; padding: 26px; }
+.summary-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.summary-heading h3 { margin: 0; }
+.summary-heading > span { font-size: 10px; background: #e1e7d7; padding: 6px 9px; border-radius: 20px; }
+.summary-heading + p { margin-top: 8px; }
+.checkout .bag-item img { border-radius: 5px; }
+.checkout .quantity { margin-top: 9px; }
+.checkout .quantity button { width: 30px; height: 30px; border-radius: 4px; background: #fafbf5; }
+.checkout .total { font-size: 22px; padding-bottom: 8px; }
+.checkout-assurances { border-top: 1px solid #d2d8c8; margin-top: 24px; padding-top: 4px; }
+.checkout-assurances > div { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.checkout-assurances svg { flex-shrink: 0; color: #566c49; }
+.checkout-assurances strong, .checkout-assurances span { display: block; font-size: 11px; line-height: 1.6; }
+.checkout-assurances span { font-size: 10px; color: #626f5b; }
+.empty-checkout { text-align: center; border: 1px solid #dde1d4; border-radius: 12px; background: #fffefa; padding: 56px 24px 36px; margin-top: 28px; }
+.empty-bag-icon { display: grid; place-items: center; background: #edf1e6; border-radius: 50%; width: 78px; height: 78px; margin: 0 auto 25px; }
+.empty-checkout h2 { font: 36px/1.2 Georgia, serif; margin: 15px 0; }
+.empty-checkout > p:not(.eyebrow) { color: #65705e; font-size: 13px; line-height: 1.8; }
+.empty-checkout .solid-link { margin-top: 26px; border-radius: 5px; }
+.empty-assurance { display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; border-top: 1px solid #e2e5db; margin-top: 40px; padding-top: 25px; }
+.empty-assurance span { display: flex; gap: 8px; align-items: center; font-size: 11px; color: #58694e; }
+@media(max-width: 900px) { .checkout .checkout-grid { grid-template-columns: 1fr; } .checkout .summary { position: static; } }
+@media(max-width: 600px) {
+ .checkout-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+ .checkout-heading h1 { font-size: 34px; }
+ .checkout .panel, .checkout .summary { padding: 20px; }
+ .checkout-steps { gap: 12px; justify-content: space-between; }
+ .checkout-steps li { font-size: 9px; gap: 5px; }
+ .checkout-test-note { align-items: flex-start; font-size: 11px; }
+ .verified-tag { display: none; }
+ .empty-checkout h2 { font-size: 29px; }
+ .checkout .bag-item { grid-template-columns: 55px minmax(0,1fr) auto; gap: 10px; }
+ .checkout .bag-item img { width: 55px; height: 65px; }
+ .checkout .bag-item h4 { font-size: 16px; }
+}

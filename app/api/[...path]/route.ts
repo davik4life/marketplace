@@ -169,7 +169,7 @@ async function handle(req: Request) {
     if (signup) {
       try { await sendWelcome(user.id); } catch { welcomePending = true; }
     }
-    return redirect(origin(req) + "/checkout" + (signup ? welcomePending ? "?welcome=pending" : "?welcome=sent" : ""), headers);
+    return redirect(origin(req) + "/" + (signup ? welcomePending ? "?welcome=pending" : "?welcome=sent" : "") + "#collection", headers);
   }
   if (path === "/api/paystack/webhook" && method === "POST") {
     const raw = await req.text();
