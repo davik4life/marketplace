@@ -266,8 +266,8 @@ async function handle(req: Request) {
       [order] =
         await sql`INSERT INTO orders(id,user_id,cart_id,idempotency_key,reference,email,delivery,items,subtotal,shipping,total) VALUES(${id},${user.id},${user.cart_id},${input.idempotencyKey},${reference},${user.email},${JSON.stringify(input.delivery)}::jsonb,${JSON.stringify(items.map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: p.quantity, image: p.image })))}::jsonb,${amount.subtotal},${amount.shipping},${amount.total}) ON CONFLICT(user_id,idempotency_key) DO UPDATE SET idempotency_key=excluded.idempotency_key RETURNING *`;
     }
-    if (order.status === "paid") return json({ url: origin(req) + "/orders" });
-    if (order.authorization_url) return json({ url: order.authorization_url });
+    if (order.status === "paid") return json({ paid: true, reference: order.reference, url: origin(req) + "/orders" });
+    if (order.authorization_url) return json({ url: order.authorization_url, accessCode: order.access_code, reference: order.reference });
     const payment = await paystack("/transaction/initialize", {
       email: order.email,
       amount: String(order.total),
@@ -282,13 +282,15 @@ async function handle(req: Request) {
       checkoutUrl.hostname !== "checkout.paystack.com"
     )
       throw new HttpError(502, "Unexpected payment URL.");
-    await sql`UPDATE orders SET authorization_url=${checkoutUrl.href} WHERE id=${order.id}`;
-    return json({ url: checkoutUrl.href });
+    if (typeof payment.access_code !== "string" || !payment.access_code)
+      throw new HttpError(502, "Paystack did not return a payment session. Please try again.");
+    await sql`UPDATE orders SET authorization_url=${checkoutUrl.href},access_code=${payment.access_code} WHERE id=${order.id}`;
+    return json({ url: checkoutUrl.href, accessCode: payment.access_code, reference: order.reference });
   }
   if (path === "/api/orders" && method === "GET")
     return json({
       orders:
-        await db()`SELECT o.id,o.reference,o.authorization_url,o.delivery,o.items,o.subtotal,o.shipping,o.total,o.status,o.created_at,e.status AS email_status FROM orders o LEFT JOIN email_outbox e ON e.order_id=o.id WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 50`,
+        await db()`SELECT o.id,o.reference,o.authorization_url,o.access_code,o.delivery,o.items,o.subtotal,o.shipping,o.total,o.status,o.created_at,e.status AS email_status FROM orders o LEFT JOIN email_outbox e ON e.order_id=o.id WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 50`,
     });
   if (path === "/api/payment/verify" && method === "POST") {
     const input = await body(req);

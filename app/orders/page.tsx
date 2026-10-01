@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { api, useShop } from "../shop-context";
 import { money } from "@/lib/commerce";
+import { openInlinePayment } from "@/lib/inline-payment";
 import { toast } from "sonner";
 export default function Orders() {
   const { user, ready, googleReady } = useShop();
@@ -50,6 +51,13 @@ export default function Orders() {
     } finally {
       setBusy("");
     }
+  }
+  async function resume(order: any) {
+    setBusy(order.id);
+    try {
+      if (await openInlinePayment(order.access_code)) await action(order);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(""); }
   }
   return (
     <main className="orders">
@@ -105,8 +113,8 @@ export default function Orders() {
                   : "Confirmation email pending."
                 : "If you completed payment, check its status below."}
             </p>
-            {order.status !== "paid" && order.authorization_url && (
-              <a className="solid-link" href={order.authorization_url}>Continue test payment</a>
+            {order.status !== "paid" && order.access_code && (
+              <button className="solid-link" disabled={!!busy} onClick={() => void resume(order)}>Continue test payment</button>
             )}
             {(order.status !== "paid" || order.email_status !== "sent") && (
               <button

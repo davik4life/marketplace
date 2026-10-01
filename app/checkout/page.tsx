@@ -4,13 +4,29 @@ import { ArrowLeft, LockKeyhole, ArrowRight, ShieldCheck, Truck, Mail, ShoppingB
 import { toast } from "sonner";
 import { useShop, api } from "../shop-context";
 import { money, totals } from "@/lib/commerce";
+import { openInlinePayment } from "@/lib/inline-payment";
 import { Button } from "@/components/ui/button";
 export default function Checkout() {
-  const { items, user, ready, busy, preview, googleReady, paymentReady, setQuantity } =
+  const { items, user, ready, busy, preview, googleReady, paymentReady, setQuantity, refresh } =
     useShop();
   const [submitting, setSubmitting] = useState(false),
     [error, setError] = useState(""),
-    [key, setKey] = useState("");
+    [key, setKey] = useState(""),
+    [pendingReference, setPendingReference] = useState(""),
+    [confirmed, setConfirmed] = useState(false),
+    [emailPending, setEmailPending] = useState(false),
+    [verifying, setVerifying] = useState(false);
+  async function verifyPayment(reference: string) {
+    setVerifying(true);
+    try {
+      const result = await api("/payment/verify", {method: "POST", body: JSON.stringify({reference})});
+      if (!result.paid) throw Error("Payment is awaiting verification. Please check your orders.");
+      setEmailPending(result.emailPending);
+      setConfirmed(true);
+      setPendingReference("");
+      await refresh();
+    } finally { setVerifying(false); }
+  }
   const amount = items.length
     ? totals(items)
     : { subtotal: 0, shipping: 0, total: 0 };
@@ -28,15 +44,20 @@ export default function Checkout() {
     setKey(idempotencyKey);
     setSubmitting(true);
     try {
+      if (pendingReference) { await verifyPayment(pendingReference); return; }
       const result = await api("/checkout", {
         method: "POST",
         body: JSON.stringify({ delivery, idempotencyKey }),
       });
-      location.assign(result.url);
+      if (result.paid || await openInlinePayment(result.accessCode)) {
+        setPendingReference(result.reference);
+        await verifyPayment(result.reference);
+      } else {
+        toast.info("Payment window closed. Your bag and details are still here.");
+      }
     } catch (e) {
       setError((e as Error).message);
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   }
   return (
     <main className="checkout">
@@ -49,7 +70,9 @@ export default function Checkout() {
         <span className="secure-label"><LockKeyhole size={16} /> Secure checkout</span>
       </div>
       <div className="checkout-test-note"><span>TEST MODE</span> Try the complete checkout. No real charges or shipments.</div>
-      {!ready ? (
+      {confirmed ? (
+        <section className="empty-checkout" aria-live="polite"><span className="empty-bag-icon"><CheckCircle2 size={36} /></span><p className="eyebrow">PAYMENT CONFIRMED</p><h2>Thank you for making room for Okirika.</h2><p>{emailPending ? "Your test order is confirmed. We’re retrying your confirmation email." : "Your test order is confirmed. Your confirmation email has been submitted for delivery."}</p><a className="solid-link" href="/orders">View your order <ArrowRight size={16} /></a></section>
+      ) : !ready ? (
         <p className="loading">Opening your bag…</p>
       ) : !items.length ? (
         <section className="empty-checkout">
@@ -174,7 +197,7 @@ export default function Checkout() {
                 />
                 Your card details stay on Paystack’s secure checkout.
               </p>
-              <div className="payment-provider"><ShieldCheck size={26} /><div><strong>Paystack</strong><span>You’ll be redirected to complete your test payment.</span></div><span className="provider-test">TEST</span></div>
+              <div className="payment-provider"><ShieldCheck size={26} /><div><strong>Paystack</strong><span>Complete your test payment here, without leaving the shop.</span></div><span className="provider-test">TEST</span></div>
               {!user && <p className="field-note">Sign in or create an account above to continue to payment.</p>}
               {error && (
                 <p role="alert" className="error">
@@ -188,8 +211,8 @@ export default function Checkout() {
                 }
               >
                 {submitting
-                  ? "Opening secure checkout…"
-                  : !paymentReady ? "Test payments are being connected" : `Pay ${money(amount.total)} with Paystack`}
+                  ? verifying ? "Verifying your payment…" : "Opening secure payment…"
+                  : pendingReference ? "Check payment status" : !paymentReady ? "Test payments are being connected" : `Pay ${money(amount.total)} with Paystack`}
               </button>
               <p className="payment-footnote"><Mail size={14} /> A confirmation email follows your verified payment.</p>
               <a className="checkout-help" href="/help#payments">How checkout works <ArrowRight size={12} /></a>
@@ -269,7 +292,7 @@ export default function Checkout() {
               <strong>{money(amount.total)}</strong>
             </div>
             <p className="small">All prices in Nigerian naira. Delivery included above.</p>
-            <div className="checkout-assurances"><div><Truck size={20} /><p><strong>Delivery within Nigeria</strong><span>₦2,500 · Free from ₦75,000</span></p></div><div><LockKeyhole size={20} /><p><strong>Secure payment</strong><span>Processed on Paystack’s checkout</span></p></div><div><Mail size={20} /><p><strong>Keep track of every order</strong><span>Email confirmation & saved order history</span></p></div></div>
+            <div className="checkout-assurances"><div><Truck size={20} /><p><strong>Delivery within Nigeria</strong><span>₦2,500 · Free from ₦75,000</span></p></div><div><LockKeyhole size={20} /><p><strong>Secure payment</strong><span>Paystack payment window · Stay on this page</span></p></div><div><Mail size={20} /><p><strong>Keep track of every order</strong><span>Email confirmation & saved order history</span></p></div></div>
           </aside>
         </div>
         </>

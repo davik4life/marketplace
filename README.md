@@ -1,6 +1,6 @@
 # Okirika
 
-A home and lifestyle shop with Neon PostgreSQL persistence, Google OpenID Connect sign-in, Paystack hosted test checkout, and Mailgun receipts. The catalog and imagery are illustrative sample products; replace them before selling actual stock.
+A home and lifestyle shop with Neon PostgreSQL persistence, Google OpenID Connect sign-in, Paystack inline test checkout, and Mailgun receipts. The catalog and imagery are illustrative sample products; replace them before selling actual stock.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ Requires Node 22.13+. Run `npm install`, complete `.env`, then `npm run db:setup
 
 - `DATABASE_URL`: Neon pooled connection string with SSL. Create a development branch for testing. SQL uses Neon's HTTP driver, compatible with Netlify Functions.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Google Cloud Console → Google Auth Platform. Configure Branding, Audience, and an OAuth client of type **Web application**. Add your Google account as a test user if the app is External/Testing. Add `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI. For hosting, add the exact HTTPS origin plus `/api/auth/google/callback`. Server flow needs no JavaScript origin. Only openid, email, and profile scopes are used.
-- `PAYSTACK_SECRET_KEY`: a key starting with `sk_test_` from Paystack test mode. Live keys are intentionally rejected. This server-initialized hosted checkout does not need the public key. The callback is `APP_URL/payment/return`. Configure the webhook at `APP_URL/api/paystack/webhook` on a publicly reachable deployment. Use the simulated test methods Paystack provides on its checkout.
+- `PAYSTACK_SECRET_KEY`: a key starting with `sk_test_` from Paystack test mode. Live keys are intentionally rejected. This server-initialized inline checkout does not need the public key. The callback is `APP_URL/payment/return`. Configure the webhook at `APP_URL/api/paystack/webhook` on a publicly reachable deployment. Use the simulated test methods Paystack provides on its checkout.
 - `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_FROM`: a Mailgun sending key, verified domain, and sender (e.g. `Okirika <orders@your-domain>`). Choose `MAILGUN_REGION=US` or `EU`. Sandbox domains can only email authorized recipients; verify your test recipient in Mailgun first. Test Paystack purchases still send real emails.
 - `APP_URL`: exact canonical origin, without trailing slash. Local default is `http://localhost:5173`. The production value must match the Google redirect registration.
 
@@ -44,3 +44,7 @@ Register `https://okirika-home.netlify.app/api/auth/google/callback` exactly in 
 
 `/signup` creates new Google-linked accounts; `/signin` only signs in existing accounts. The intent is bound to the single-use OAuth state. Unknown sign-ins go to sign-up, while existing sign-ups go to sign-in. Registration atomically queues a welcome email in `welcome_email_outbox`; ordinary sign-ins never queue additional welcome emails. Email failures do not prevent sign-in or undo paid orders. The callback attempts the welcome immediately and the scheduled `retry-emails` function handles transient failures. Mailgun acceptance is not proof of inbox delivery.
 # marketplace
+
+## Inline payments
+
+The official `@paystack/inline-js` SDK resumes a server-initialized transaction using its saved access code. Checkout and pending orders open Paystack over the current page. Closing the window preserves the checkout form and idempotency key. The popup success callback only triggers server verification; it never marks an order paid directly. Verification failures offer a status retry instead of starting another payment. A verified checkout shows confirmation inline and refreshes the bag. The hosted callback remains available for payment channels that return via redirect.
