@@ -41,7 +41,7 @@ export default function PaymentReturn() {
         {success ? "THANK YOU FOR SHOPPING OKIRIKA" : "ONE LAST CHECK"}
       </p>
       <h2>
-        {success ? "Good things are worth making room for." : "Your payment"}
+        {success ? "Thank you for your patronage!" : "Your payment"}
       </h2>
       <p role="status">{state}</p>
       {!busy && !success && (

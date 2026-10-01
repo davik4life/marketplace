@@ -14,7 +14,7 @@ export async function sendReceipt(orderId: string) {
     const messageId = await sendMail({
       to: order.email,
       subject: `Your Okirika order is confirmed · ${order.reference}`,
-      text: `Thank you for making room for Okirika, ${order.delivery.name}.\n\nYour test payment has been confirmed.\nOrder: ${order.reference}\n\n${order.items.map((x: any) => `${x.name} × ${x.quantity}: ${money(x.price * x.quantity)}`).join("\n")}\nDelivery: ${money(order.shipping)}\nTotal: ${money(order.total)}\n\nDelivery address: ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.state}, Nigeria\n\nThis is a test order; no goods will be dispatched.\nWith care,\nOkirika`,
+      text: `Thank you for your patronage, ${order.delivery.name}!\n\nYour test payment has been confirmed.\nOrder: ${order.reference}\n\n${order.items.map((x: any) => `${x.name} × ${x.quantity}: ${money(x.price * x.quantity)}`).join("\n")}\nDelivery: ${money(order.shipping)}\nTotal: ${money(order.total)}\n\nDelivery address: ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.state}, Nigeria\n\nThis is a test order; no goods will be dispatched.\nWith care,\nOkirika`,
       messageId: `okirika-${order.id}`,
     });
     await sql`UPDATE email_outbox SET status='sent',message_id=${messageId},sent_at=now(),lease_until=null WHERE order_id=${orderId}`;

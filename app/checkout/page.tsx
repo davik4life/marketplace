@@ -71,7 +71,7 @@ export default function Checkout() {
       </div>
       <div className="checkout-test-note"><span>TEST MODE</span> Try the complete checkout. No real charges or shipments.</div>
       {confirmed ? (
-        <section className="empty-checkout" aria-live="polite"><span className="empty-bag-icon"><CheckCircle2 size={36} /></span><p className="eyebrow">PAYMENT CONFIRMED</p><h2>Thank you for making room for Okirika.</h2><p>{emailPending ? "Your test order is confirmed. We’re retrying your confirmation email." : "Your test order is confirmed. Your confirmation email has been submitted for delivery."}</p><a className="solid-link" href="/orders">View your order <ArrowRight size={16} /></a></section>
+        <section className="empty-checkout" aria-live="polite"><span className="empty-bag-icon"><CheckCircle2 size={36} /></span><p className="eyebrow">PAYMENT CONFIRMED</p><h2>Thank you for your patronage!</h2><p>{emailPending ? "Your test order is confirmed. We’re retrying your confirmation email." : "Your test order is confirmed. Your confirmation email has been submitted for delivery."}</p><a className="solid-link" href="/orders">View your order <ArrowRight size={16} /></a></section>
       ) : !ready ? (
         <p className="loading">Opening your bag…</p>
       ) : !items.length ? (
