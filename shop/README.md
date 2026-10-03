@@ -48,3 +48,11 @@ Register `https://okirika-home.netlify.app/api/auth/google/callback` exactly in 
 ## Inline payments
 
 The official `@paystack/inline-js` SDK resumes a server-initialized transaction using its saved access code. Checkout and pending orders open Paystack over the current page. Closing the window preserves the checkout form and idempotency key. The popup success callback only triggers server verification; it never marks an order paid directly. Verification failures offer a status retry instead of starting another payment. A verified checkout shows confirmation inline and refreshes the bag. The hosted callback remains available for payment channels that return via redirect.
+
+## Vercel sample deployment
+
+`vercel.json` uses the Hobby-compatible daily email retry schedule. Immediate welcome and receipt delivery remains part of signup/payment; only scheduled recovery is daily. Set a random `CRON_SECRET` as a server-side environment variable. The retry route rejects requests without its bearer secret.
+
+Deploy this `shop` directory from the intended Vercel Hobby account. Configure the existing server environment credentials there, set `APP_URL` to the stable production Vercel URL, and add that origin to `ALLOWED_ORIGINS`. Add `<APP_URL>/api/auth/google/callback` to the existing Google OAuth client's redirect URIs. Update the Paystack test webhook to `<APP_URL>/api/paystack/webhook`. Rebuild the native app with the new `EXPO_PUBLIC_API_URL`.
+
+Never upload `.env` files as deployment source. `.vercelignore` excludes local secrets, generated Netlify state and tool artifacts. Preserve the existing Netlify deployment until Vercel login, payment verification and emails have been checked.

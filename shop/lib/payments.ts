@@ -1,6 +1,7 @@
 import { settlementQuery } from "./settlement";
+import { receiptHtml } from "./email-template";
 import { sendMail } from "./mail";
-import { db, HttpError, paystack } from "./server";
+import { db, origin, HttpError, paystack } from "./server";
 import { money, paymentMatches } from "./commerce";
 export async function sendReceipt(orderId: string) {
   const sql = db();
@@ -13,6 +14,7 @@ export async function sendReceipt(orderId: string) {
     if (!order) throw Error("Missing paid order");
     const messageId = await sendMail({
       to: order.email,
+      html: receiptHtml(order as any, origin()),
       subject: `Your Okirika order is confirmed · ${order.reference}`,
       text: `Thank you for your patronage, ${order.delivery.name}!\n\nYour test payment has been confirmed.\nOrder: ${order.reference}\n\n${order.items.map((x: any) => `${x.name} × ${x.quantity}: ${money(x.price * x.quantity)}`).join("\n")}\nDelivery: ${money(order.shipping)}\nTotal: ${money(order.total)}\n\nDelivery address: ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.state}, Nigeria\n\nThis is a test order; no goods will be dispatched.\nWith care,\nOkirika`,
       messageId: `okirika-${order.id}`,

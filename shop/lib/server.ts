@@ -1,3 +1,4 @@
+import { bearerToken } from "./mobile-auth";
 import { neon } from "@neondatabase/serverless";
 export class HttpError extends Error {
   constructor(
@@ -70,8 +71,9 @@ export async function digest(value: string) {
 export function random() {
   return crypto.randomUUID() + crypto.randomUUID();
 }
+export function sessionToken(req: Request) { return bearerToken(req.headers.get("authorization")) || cookie(req, "okirika_session"); }
 export async function identity(req: Request) {
-  const token = cookie(req, "okirika_session");
+  const token = sessionToken(req);
   if (!token) return null;
   const [row] =
     await db()`SELECT u.id,u.email,u.name,s.cart_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=${await digest(token)} AND s.expires_at>now()`;
@@ -88,12 +90,15 @@ export function json(
   });
 }
 export function sameOrigin(req: Request) {
+  // Native clients use an explicit session token, never ambient browser cookies.
+  if (!req.headers.has("origin") && bearerToken(req.headers.get("authorization"))) return;
   if (!allowedOrigins().has(req.headers.get("origin") || ""))
     throw new HttpError(403, "Please reload the shop and try again.");
 }
 export async function cartIdentity(req: Request) {
   const user = await identity(req);
   if (user) return { id: user.cart_id as string, user, header: undefined };
+  if (bearerToken(req.headers.get("authorization"))) throw new HttpError(401,"Please sign in again.");
   const token = cookie(req, "okirika_cart");
   if (token) {
     const [cart] =

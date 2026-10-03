@@ -1,3 +1,4 @@
+import { mobileReturn, validMobileChallenge, validMobileVerifier } from "@/lib/mobile-auth";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { ZodError } from "zod";
 import {
@@ -8,6 +9,7 @@ import {
   identity,
   json,
   cookie,
+  sessionToken,
   setCookie,
   random,
   digest,
@@ -49,14 +51,39 @@ async function handle(req: Request) {
   const url = new URL(req.url),
     path = url.pathname.replace(/\/$/, ""),
     method = req.method;
+  if (path === "/api/mobile/auth/exchange" && method === "POST") {
+    const input = await body(req);
+    if (typeof input.code !== "string" || !/^[a-f0-9-]{72}$/i.test(input.code) || !validMobileVerifier(input.verifier))
+      throw new HttpError(400, "Invalid mobile sign-in.");
+    const sql = db();
+    const [login] = await sql`DELETE FROM mobile_login_codes WHERE code_hash=${await digest(input.code)} AND challenge=${await digest(input.verifier)} AND expires_at>now() RETURNING user_id`;
+    if (!login) throw new HttpError(401, "Sign-in expired. Please try again.");
+    const [cart] = await sql`SELECT id FROM carts WHERE user_id=${login.user_id}`;
+    if (!cart) throw new HttpError(401, "Please sign in again.");
+    const token = random();
+    await sql`INSERT INTO sessions(token_hash,user_id,cart_id,expires_at) VALUES(${await digest(token)},${login.user_id},${cart.id},now()+interval '30 days')`;
+    return json({token});
+  }
+  if (path === "/api/mobile/checkout" && method === "GET") {
+    const ticket = url.searchParams.get("ticket") || "";
+    if (!/^[a-f0-9-]{72}$/i.test(ticket)) throw new HttpError(401, "Checkout link expired. Reopen checkout from the app.");
+    const sql = db();
+    const [link] = await sql`DELETE FROM mobile_checkout_tickets WHERE token_hash=${await digest(ticket)} AND expires_at>now() RETURNING session_hash`;
+    if (!link) throw new HttpError(401, "Checkout link expired. Reopen checkout from the app.");
+    const [parent] = await sql`SELECT * FROM sessions WHERE token_hash=${link.session_hash} AND expires_at>now()`;
+    if (!parent) throw new HttpError(401, "Please sign in again.");
+    const token = random();
+    await sql`INSERT INTO sessions(token_hash,user_id,cart_id,expires_at,parent_token_hash) VALUES(${await digest(token)},${parent.user_id},${parent.cart_id},${parent.expires_at},${parent.token_hash})`;
+    return redirect(origin(req) + "/checkout", new Headers({"Set-Cookie":setCookie("okirika_session",token,2592000,req),"Referrer-Policy":"no-referrer"}));
+  }
   if (path === "/api/catalog" && method === "GET") {
     if (!config("DATABASE_URL"))
-      return json({ products: sampleProducts, preview: true });
+      return json({ products: sampleProducts, preview: true },200,{"Access-Control-Allow-Origin":"*"});
     return json({
       products:
         await db()`SELECT * FROM products WHERE active=true ORDER BY tone`,
       preview: false,
-    });
+    },200,{"Access-Control-Allow-Origin":"*"});
   }
   if (path === "/api/me" && method === "GET")
     return json({
@@ -74,11 +101,13 @@ async function handle(req: Request) {
     const client = required("GOOGLE_CLIENT_ID");
     const cart = await cartIdentity(req);
     const intent = url.searchParams.get("intent") === "signup" ? "signup" : "signin";
-    const state = intent + "." + random(),
+    const mobileChallenge = url.searchParams.get("mobile_challenge");
+    if (mobileChallenge && !validMobileChallenge(mobileChallenge)) throw new HttpError(400, "Invalid mobile sign-in.");
+    const state = intent + (mobileChallenge ? ".mobile." : ".") + random(),
       nonce = random(),
       verifier = random();
     const sql = db();
-    await sql`INSERT INTO oauth_states(state_hash,nonce,verifier,cart_id,expires_at) VALUES(${await digest(state)},${nonce},${verifier},${cart.id},now()+interval '10 minutes')`;
+    await sql`INSERT INTO oauth_states(state_hash,nonce,verifier,cart_id,expires_at,mobile_challenge) VALUES(${await digest(state)},${nonce},${verifier},${cart.id},now()+interval '10 minutes',${mobileChallenge})`;
     const challenge = Buffer.from(
       await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)),
     ).toString("base64url");
@@ -111,7 +140,7 @@ async function handle(req: Request) {
     const clearFlow = new Headers();
     clearFlow.append("Set-Cookie", setCookie("okirika_oauth", "", 0, req));
     if (url.searchParams.has("error"))
-      return redirect(origin(req) + authPage + "?auth=cancelled", clearFlow);
+      return redirect(flow.mobile_challenge ? mobileReturn + "?error=cancelled" : origin(req) + authPage + "?auth=cancelled", clearFlow);
     const code = url.searchParams.get("code");
     if (!code)
       throw new HttpError(400, "Google did not return a sign-in code.");
@@ -149,7 +178,7 @@ async function handle(req: Request) {
       ? await sql.query(signupQuery, [crypto.randomUUID(), payload.sub, payload.email, name])
       : await sql.query(signinQuery, [payload.sub, payload.email, name]);
     if (!user)
-      return redirect(origin(req) + (signup ? "/signin?auth=exists" : "/signup?auth=no-account"), clearFlow);
+      return redirect(flow.mobile_challenge ? mobileReturn + "?error=" + (signup ? "exists" : "no-account") : origin(req) + (signup ? "/signin?auth=exists" : "/signup?auth=no-account"), clearFlow);
     const [accountCart] =
       await sql`INSERT INTO carts(id,token_hash,user_id) VALUES(${crypto.randomUUID()},${await digest(random())},${user.id}) ON CONFLICT(user_id) DO UPDATE SET user_id=excluded.user_id RETURNING id`;
     if (accountCart.id !== flow.cart_id)
@@ -157,6 +186,12 @@ async function handle(req: Request) {
         sql`INSERT INTO cart_items(cart_id,product_id,quantity) SELECT ${accountCart.id},product_id,quantity FROM cart_items WHERE cart_id=${flow.cart_id} AND EXISTS(SELECT 1 FROM carts WHERE id=${flow.cart_id} AND user_id IS NULL) ON CONFLICT(cart_id,product_id) DO UPDATE SET quantity=LEAST(20,cart_items.quantity+excluded.quantity)`,
         sql`DELETE FROM cart_items WHERE cart_id=${flow.cart_id} AND EXISTS(SELECT 1 FROM carts WHERE id=${flow.cart_id} AND user_id IS NULL)`,
       ]);
+    if (flow.mobile_challenge) {
+      const code = random();
+      await sql`INSERT INTO mobile_login_codes(code_hash,challenge,user_id,expires_at) VALUES(${await digest(code)},${flow.mobile_challenge},${user.id},now()+interval '2 minutes')`;
+      if (signup) { try { await sendWelcome(user.id); } catch {} }
+      return redirect(mobileReturn + "?code=" + encodeURIComponent(code), clearFlow);
+    }
     const session = random();
     await sql`INSERT INTO sessions(token_hash,user_id,cart_id,expires_at) VALUES(${await digest(session)},${user.id},${accountCart.id},now()+interval '30 days')`;
     const headers = new Headers();
@@ -203,7 +238,7 @@ async function handle(req: Request) {
   }
   if (method !== "GET") sameOrigin(req);
   if (path === "/api/auth/logout" && method === "POST") {
-    const token = cookie(req, "okirika_session");
+    const token = sessionToken(req);
     if (token)
       await db()`DELETE FROM sessions WHERE token_hash=${await digest(token)}`;
     const headers = new Headers({
@@ -239,6 +274,11 @@ async function handle(req: Request) {
   const user = await identity(req);
   if (!user)
     throw new HttpError(401, "Please sign in with Google to continue.");
+  if (path === "/api/mobile/checkout" && method === "POST") {
+    const ticket = random();
+    await db()`INSERT INTO mobile_checkout_tickets(token_hash,session_hash,expires_at) VALUES(${await digest(ticket)},${await digest(sessionToken(req))},now()+interval '60 seconds')`;
+    return json({url:origin(req) + "/api/mobile/checkout?ticket=" + encodeURIComponent(ticket)});
+  }
   if (path === "/api/account/welcome" && method === "POST") {
     await sendWelcome(user.id);
     return json({ ok: true });
@@ -345,6 +385,8 @@ async function route(req: Request) {
       status,
       type: error instanceof Error ? error.name : "unknown",
     });
+    if (new URL(req.url).pathname.startsWith("/api/auth/google") && cookie(req,"okirika_oauth").includes(".mobile."))
+      return redirect(mobileReturn + "?error=unavailable");
     if (new URL(req.url).pathname.startsWith("/api/auth/google"))
       return redirect(origin(req) + (cookie(req, "okirika_oauth").startsWith("signup.") || new URL(req.url).searchParams.get("intent") === "signup" ? "/signup" : "/signin") + "?auth=unavailable");
     return json({ error: message }, status);

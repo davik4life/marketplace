@@ -1,5 +1,5 @@
 import { required, config } from "./server";
-export async function sendMail(input: { to: string; subject: string; text: string; messageId: string }) {
+export async function sendMail(input: { to: string; subject: string; text: string; html: string; messageId: string }) {
   const region = config("MAILGUN_REGION") || "US";
   if (!["US", "EU"].includes(region)) throw Error("Invalid Mailgun region");
   const domain = required("MAILGUN_DOMAIN");
@@ -8,6 +8,7 @@ export async function sendMail(input: { to: string; subject: string; text: strin
   form.set("to", input.to);
   form.set("subject", input.subject);
   form.set("text", input.text);
+  form.set("html", input.html);
   form.set("h:Message-Id", `<${input.messageId}@${domain}>`);
   const response = await fetch(`https://${region === "EU" ? "api.eu.mailgun.net" : "api.mailgun.net"}/v3/${encodeURIComponent(domain)}/messages`, {
     method: "POST", headers: { Authorization: "Basic " + btoa("api:" + required("MAILGUN_API_KEY")) },

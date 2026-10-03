@@ -1,0 +1,10 @@
+.env*
+.netlify
+.next
+node_modules
+outputs
+work
+.sites-runtime
+.agents
+.codex
+netlify

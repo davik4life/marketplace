@@ -23,6 +23,7 @@ export default function Checkout() {
       if (!result.paid) throw Error("Payment is awaiting verification. Please check your orders.");
       setEmailPending(result.emailPending);
       setConfirmed(true);
+      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"payment-complete"}));
       setPendingReference("");
       await refresh();
     } finally { setVerifying(false); }
