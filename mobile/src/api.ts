@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-export const SITE = (process.env.EXPO_PUBLIC_API_URL || 'https://okirika-home.netlify.app').replace(/\/$/, '');
+export const SITE = (process.env.EXPO_PUBLIC_API_URL || 'https://okirika-shop.vercel.app').replace(/\/$/, '');
 let memoryToken: string | null = null;
 export const storage = {
   get: async (key: string) => Platform.OS === 'web' ? (key === 'session' ? memoryToken : null) : SecureStore.getItemAsync('okirika.' + key),
