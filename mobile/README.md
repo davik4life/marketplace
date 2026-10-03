@@ -21,7 +21,7 @@ npx eslint App.tsx src
 npx expo start
 ```
 
-Optional `.env` contains only `EXPO_PUBLIC_API_URL`; its default is `https://okirika-shop.vercel.app`. Never put database, Google client secret, Mailgun or Paystack secret keys in this app. Those remain on Vercel.
+Optional `.env` contains only `EXPO_PUBLIC_API_URL`; its default is `https://okirika-shop.vercel.app`. All EAS build profiles use this same Vercel API. Never put database, Google client secret, Mailgun or Paystack secret keys in this app. Those remain on Vercel.
 
 The web export is a layout preview. Native Google authentication, SecureStore and embedded checkout must be tested on Android/iOS. The bundled catalogue is a read-only fallback when the API is unavailable.
 
@@ -41,12 +41,12 @@ Android preview produces an APK. The simulator profile produces an iOS simulator
 
 ## Backend deployment
 
-The sibling `shop` project is deployed at `https://okirika-shop.vercel.app` with its mobile endpoints and production settings. The `004_mobile.sql` migration was applied to the configured Neon database. Add `https://okirika-shop.vercel.app/api/auth/google/callback` to the Google OAuth client's authorized redirect URIs before testing sign-in.
+The sibling `shop` project is deployed at `https://okirika-shop.vercel.app` with the mobile endpoints and production settings. The `004_mobile.sql` migration is applied to the configured Neon database. Mobile and web use this same API so account carts and orders are read from the same backend.
 
-After the Vercel callback is authorized in Google OAuth, the backend redirects to `okirika://auth` with a short-lived code; the app exchanges it using a verifier held in SecureStore. Set the Paystack webhook URL to `https://okirika-shop.vercel.app/api/paystack/webhook`. Checkout uses a separate single-use ticket to create a child web session. Signing out revokes that session too.
+Google OAuth uses `https://okirika-shop.vercel.app/api/auth/google/callback` and redirects to `okirika://auth` with a short-lived code; the app exchanges it using a verifier held in SecureStore. Paystack webhooks use `https://okirika-shop.vercel.app/api/paystack/webhook`. Checkout uses a separate single-use ticket to create a child web session. Signing out revokes that session too.
 
 Before device acceptance: sign up, confirm the welcome email, sign out/in, add products, change quantity, open checkout, cancel and reopen payment, complete a Paystack test payment, verify the paid order and receipt, relaunch the app and verify session persistence. Mailgun sandbox recipients must be authorized until a production sending domain is configured.
 
 ## Release status
 
-This is an internal test app, not an App Store / Play Store release. Native device end-to-end testing remains pending Google OAuth callback authorization and device access. Store release work still includes account deletion, Apple sign-in where required, finalized privacy/support details, store metadata and review. Payments remain in test mode.
+This is an internal test app, not an App Store / Play Store release. Native device end-to-end acceptance still needs to be run on Android and iOS. Store release work still includes account deletion, Apple sign-in where required, finalized privacy/support details, store metadata and review. Payments remain in test mode.
