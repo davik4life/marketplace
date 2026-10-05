@@ -44,8 +44,21 @@ function Shop(){
   }catch(e){inform((e as Error).message)}finally{authLock.current=false;setBusy(false)}
  }
  // Session setup runs once; callbacks read the current session through the ref.
+ useEffect(()=>{
+  let interval:ReturnType<typeof setInterval>|undefined,synchronizing=false;
+  const synchronize=async()=>{
+   if(synchronizing||AppState.currentState!=='active')return;
+   synchronizing=true;
+   try{const data=await api('/sync',session.current);setProducts(data.products);setOffline(!!data.preview);if(session.current)setItems(data.items)}
+   catch(e){setOffline(true);if((e as Error).message==='Please sign in again.')void refresh()}
+   finally{synchronizing=false}
+  };
+  const startPolling=()=>{if(interval)clearInterval(interval);void synchronize();interval=setInterval(()=>void synchronize(),5000)};
+  void(async()=>{const t=await storage.get('session');session.current=t;setToken(t);await refresh(t);if(AppState.currentState==='active')startPolling();const initial=await Linking.getInitialURL();if(initial)await acceptAuth(initial)})();
+  const subscription=AppState.addEventListener('change',state=>{if(state==='active'){if(session.current)void refresh();startPolling()}else if(interval){clearInterval(interval);interval=undefined}});
+  return()=>{subscription.remove();if(interval)clearInterval(interval)};
  // eslint-disable-next-line react-hooks/exhaustive-deps
- useEffect(()=>{void(async()=>{const t=await storage.get('session');session.current=t;setToken(t);await refresh(t);const initial=await Linking.getInitialURL();if(initial)await acceptAuth(initial)})();const subscription=AppState.addEventListener('change',state=>{if(state==='active'&&session.current)void refresh()});return()=>subscription.remove()},[]);
+ },[]);
  async function login(){
   if(Platform.OS==='web'){inform('This is the browser preview. Google sign-in works in the installed iPhone or Android app.');return;}
   setBusy(true);setMessage('');

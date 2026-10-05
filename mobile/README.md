@@ -41,7 +41,7 @@ Android preview produces an APK. The simulator profile produces an iOS simulator
 
 ## Backend deployment
 
-The sibling `shop` project is deployed at `https://okirika-shop.vercel.app` with the mobile endpoints and production settings. The `004_mobile.sql` migration is applied to the configured Neon database. Mobile and web use this same API so account carts and orders are read from the same backend.
+The sibling `shop` project is deployed at `https://okirika-shop.vercel.app` with the mobile endpoints and production settings. The `004_mobile.sql` migration is applied to the configured Neon database. Mobile and web use this same API so account carts and orders are read from the same backend. The active catalog and shopping bag synchronize automatically every five seconds while the app is foregrounded; signing in to the same account on web and mobile shares bag changes.
 
 Google OAuth uses `https://okirika-shop.vercel.app/api/auth/google/callback` and redirects to `okirika://auth` with a short-lived code; the app exchanges it using a verifier held in SecureStore. Paystack webhooks use `https://okirika-shop.vercel.app/api/paystack/webhook`. Checkout uses a separate single-use ticket to create a child web session. Signing out revokes that session too.
 

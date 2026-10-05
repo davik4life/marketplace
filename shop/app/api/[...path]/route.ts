@@ -85,6 +85,32 @@ async function handle(req: Request) {
       preview: false,
     },200,{"Access-Control-Allow-Origin":"*"});
   }
+  if (path === "/api/sync" && method === "GET") {
+    if (!config("DATABASE_URL"))
+      return json(
+        { products: sampleProducts, items: [], preview: true },
+        200,
+        { "Access-Control-Allow-Origin": "*" },
+      );
+    const products =
+      await db()`SELECT * FROM products WHERE active=true ORDER BY tone`;
+    const user = await identity(req);
+    let items: Awaited<ReturnType<typeof cartLines>> = [];
+    const headers: Record<string, string> = req.headers.has("authorization")
+      ? {}
+      : { "Access-Control-Allow-Origin": "*" };
+    if (user) {
+      items = await cartLines(user.cart_id);
+    } else if (
+      req.headers.has("authorization") ||
+      cookie(req, "okirika_cart")
+    ) {
+      const cart = await cartIdentity(req);
+      items = await cartLines(cart.id);
+      if (cart.header) headers["Set-Cookie"] = cart.header;
+    }
+    return json({ products, items, preview: false }, 200, headers);
+  }
   if (path === "/api/me" && method === "GET")
     return json({
       user: config("DATABASE_URL") ? await identity(req) : null,

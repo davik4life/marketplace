@@ -82,6 +82,42 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     if (auth === "cancelled")
       toast.info("Sign-in cancelled. You can try again whenever you’re ready.");
   }, [refresh]);
+  useEffect(() => {
+    let timer: number;
+    let inFlight = false;
+    let active = true;
+    const synchronize = async () => {
+      if (inFlight || document.visibilityState !== "visible") return;
+      inFlight = true;
+      try {
+        const data = await api("/sync");
+        setProducts(data.products);
+        setItems(data.items);
+        setPreview(data.preview);
+        setError("");
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        inFlight = false;
+        if (active && document.visibilityState === "visible")
+          timer = window.setTimeout(() => void synchronize(), 5000);
+      }
+    };
+    const resume = () => {
+      if (document.visibilityState !== "visible") return;
+      window.clearTimeout(timer);
+      void synchronize();
+    };
+    timer = window.setTimeout(() => void synchronize(), 5000);
+    document.addEventListener("visibilitychange", resume);
+    window.addEventListener("focus", resume);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
+      window.removeEventListener("focus", resume);
+    };
+  }, []);
   const setQuantity = useCallback(
     async (id: string, n: number) => {
       if (preview)
